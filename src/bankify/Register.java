@@ -7,7 +7,9 @@ import javax.swing.border.LineBorder;
 import javax.swing.border.CompoundBorder;
 import java.awt.event.*;
 import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.util.regex.Matcher; 
+import bankify.service.AuthService;
+import bankify.dao.UserDao;
 
 public class Register extends JFrame {
 
@@ -231,9 +233,16 @@ public class Register extends JFrame {
                 else if (!pass.equals(cpass)) { errConfirm.setText("Passwords do not match!"); hasError = true; }
 
                 if (!hasError) {
-                    JOptionPane.showMessageDialog(null, "Registration Successful!");
-                    dispose();
-                    new MyProfile().setVisible(true);
+                    AuthService auth = new AuthService();
+                    boolean success = auth.register(firstName, lastName, gmail, pass);
+
+                    if (success) {
+                        JOptionPane.showMessageDialog(null, "Registration Successful!");
+                        dispose();
+                        new MyProfile().setVisible(true);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Registration failed. Try again.");
+                    }
                 }
             }
         });
