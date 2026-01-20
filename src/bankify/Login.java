@@ -3,6 +3,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.border.EmptyBorder;
+import bankify.dao.UserDao;
+import bankify.service.AuthService;
 
 public class Login extends JFrame {
 
@@ -15,6 +17,8 @@ public class Login extends JFrame {
     private JLabel errEmail, errPass;
 
     public Login() {
+    	 System.out.println("Login constructor started"); // 🔥 ADD
+    	 DBConnection.getConnection();                     // 🔥 ADD
         setTitle("Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 650);
@@ -216,7 +220,7 @@ public class Login extends JFrame {
 
         // ===== Login Action =====
         btnLogin.addActionListener(e -> {
-            String username = txtUserName.getText().trim();
+            String email = txtUserName.getText().trim();
             String password = new String(pwtPassword.getPassword()).trim();
 
             // Clear previous errors
@@ -225,7 +229,7 @@ public class Login extends JFrame {
 
             boolean hasError = false;
 
-            if (username.isEmpty()) {
+            if (email.isEmpty()) {
                 errEmail.setText("Please enter email!");
                 hasError = true;
             }
@@ -236,12 +240,14 @@ public class Login extends JFrame {
 
             if (hasError) return;
 
-            if (username.equals("aungaung@gmail.com") && password.equals("Aung1234@@")) {
+            AuthService auth = new AuthService();
+            if (auth.authenticate(email, password)) {
                 dispose();
                 new HomePage().setVisible(true);
             } else {
-                errPass.setText("Invalid username or password!");
+                errPass.setText("Invalid email or password!");
             }
+            
         });
 
         btnSignUp.addActionListener(e -> {
