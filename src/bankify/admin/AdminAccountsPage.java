@@ -38,10 +38,10 @@ public class AdminAccountsPage extends JFrame {
         
         // Add sample accounts
         accountList.add(new Account("ACC001", "John Doe", "johndoe@email.com", 
-                "09-123456789", "User", 1500000.0, "Active", "2023-01-15"));
+                "09-123456789", "Normal User", 1500000.0, "Active", "2023-01-15"));
         
         accountList.add(new Account("ACC002", "Jane Smith", "janesmith@email.com", 
-                "09-987654321", "User", 2500000.0, "Active", "2023-02-20"));
+                "09-987654321", "Normal User", 2500000.0, "Active", "2023-02-20"));
         
         accountList.add(new Account("ACC003", "Alice Brown", "aliceb@email.com", 
                 "09-555666777", "Agent", 750000.0, "Inactive", "2023-03-10"));
@@ -50,7 +50,7 @@ public class AdminAccountsPage extends JFrame {
                 "09-888999000", "Agent", 5000000.0, "Active", "2023-04-05"));
         
         accountList.add(new Account("ACC005", "Charlie Lee", "charlie@email.com", 
-                "09-111222333", "User", 1200000.0, "Active", "2023-05-12"));
+                "09-111222333", "Normal User", 1200000.0, "Active", "2023-05-12"));
         
         accountList.add(new Account("ACC006", "David Kim", "davidk@email.com", 
                 "09-444555666", "Agent", 1800000.0, "Inactive", "2023-06-18"));
@@ -158,7 +158,7 @@ public class AdminAccountsPage extends JFrame {
         filterPanel.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1));
         filterPanel.setPreferredSize(new Dimension(200, 40));
         
-        filterComboBox = new JComboBox<>(new String[]{"All Accounts", "Active", "Inactive", "User", "Agent"});
+        filterComboBox = new JComboBox<>(new String[]{"All Accounts", "Active", "Inactive", "Normal User", "Agent"});
         filterComboBox.setFont(new Font("Tw Cen MT", Font.PLAIN, 16));
         filterComboBox.setBackground(Color.WHITE);
         filterComboBox.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
@@ -335,8 +335,8 @@ public class AdminAccountsPage extends JFrame {
                 case "Inactive":
                     matches = "Inactive".equals(acc.getStatus());
                     break;
-                case "User":
-                    matches = "User".equals(acc.getAccountType());
+                case "Normal User":
+                    matches = "Normal User".equals(acc.getAccountType());
                     break;
                 case "Agent":
                     matches = "Agent".equals(acc.getAccountType());
@@ -719,4 +719,5 @@ public class AdminAccountsPage extends JFrame {
             frame.setVisible(true);
         });
     }
+
 }
