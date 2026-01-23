@@ -10,6 +10,7 @@ import java.awt.event.MouseEvent;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
+import bankify.dao.*;
 
 public class MyProfile extends JFrame {
 
@@ -21,6 +22,10 @@ public class MyProfile extends JFrame {
     private DatePicker datePicker;
     // Error Labels
     private JLabel err1, err2, err3, err4, err5, err6;
+    // auto pass firstname lastname and email
+    private Customer customer;
+    private CustomerDao customerDao;
+
 
     public MyProfile() {
         setTitle("Bankify - My Profile");
@@ -36,6 +41,25 @@ public class MyProfile extends JFrame {
         getContentPane().add(sidebar, BorderLayout.WEST);
         getContentPane().add(contentPanel, BorderLayout.CENTER);
     }
+ // New constructor for first-time login profile setup
+    public MyProfile(Customer customer, CustomerDao customerDao) {
+        this(); // call default constructor to build UI
+        this.customer = customer;
+        this.customerDao = customerDao;
+
+        textField.setText(customer.getFirstName());
+        textField.setEditable(false);
+
+        textField_1.setText(customer.getLastName());
+        textField_1.setEditable(false);
+
+        textField_4.setText(customer.getEmail());
+        textField_4.setEditable(false);
+    }
+   
+        
+    
+
 
     private JPanel createContentPanel() {
         JPanel contentPanel = new JPanel();
@@ -99,6 +123,7 @@ public class MyProfile extends JFrame {
         textField.setFont(fieldFont);
         textField.setBounds(column1X, 240, fieldWidth, fieldHeight);
         contentPanel.add(textField);
+        
 
         err1 = new JLabel("");
         err1.setForeground(errorColor);
@@ -210,6 +235,9 @@ public class MyProfile extends JFrame {
         err6.setFont(errorFont);
         err6.setBounds(column2X, 525, fieldWidth, 25);
         contentPanel.add(err6);
+        
+        
+        
 
         // --- Buttons ---
         JButton btnEdit = new RoundedCornerButton("Edit");
@@ -225,14 +253,17 @@ public class MyProfile extends JFrame {
         disableTextFields();
         return contentPanel;
     }
-
     private void enableEditing() {
-        textField.setEditable(true);
-        textField_1.setEditable(true);
-        datePicker.setEnabled(true); // Fixed: Replaced textField_2
-        textField_3.setEditable(true);
-        textField_4.setEditable(true);
-        textField_5.setEditable(true);
+        // Keep first name, last name, and email locked
+        textField.setEditable(false);   // First name
+        textField_1.setEditable(false); // Last name
+        textField_4.setEditable(false); // Email
+
+        // Allow editing only for DOB, address, and phone
+        datePicker.setEnabled(true);
+        textField_3.setEditable(true);  // Address
+        textField_5.setEditable(true);  // Phone
+
         clearErrors();
     }
 
@@ -254,38 +285,30 @@ public class MyProfile extends JFrame {
         clearErrors();
         boolean hasError = false;
 
-        if (textField.getText().trim().isEmpty()) { err1.setText("! First name required"); hasError = true; }
-        if (textField_1.getText().trim().isEmpty()) { err2.setText("! Last name required"); hasError = true; }
-
-        // Fixed: Check datePicker instead of textField_2
-        if (datePicker.getDate() == null) {
-            err3.setText("! Date of birth required");
-            hasError = true;
-        }
-
+        // validate DOB, address, phone only
+        if (datePicker.getDate() == null) { err3.setText("! Date of birth required"); hasError = true; }
         if (textField_3.getText().trim().isEmpty()) { err4.setText("! Address required"); hasError = true; }
-
-        String email = textField_4.getText().trim();
-        if (email.isEmpty()) {
-            err5.setText("! Email is required");
-            hasError = true;
-        } else if (!isValidEmail(email)) {
-            err5.setText("! Invalid Gmail format");
-            hasError = true;
-        }
-
         String phone = textField_5.getText().trim();
-        if (phone.isEmpty()) {
-            err6.setText("! Phone required");
-            hasError = true;
-        } else if (!isValidPhoneNumber(phone)) {
-            err6.setText("! Invalid (10-15 digits)");
-            hasError = true;
-        }
+        if (phone.isEmpty()) { err6.setText("! Phone required"); hasError = true; }
+        else if (!isValidPhoneNumber(phone)) { err6.setText("! Invalid (10-15 digits)"); hasError = true; }
 
         if (!hasError) {
-            JOptionPane.showMessageDialog(this, "Profile saved successfully!\nDOB: " + datePicker.getDate());
-            disableTextFields();
+            // Update only editable fields
+            customer.setPhoneNumber(phone);
+            customer.setAddress(textField_3.getText());
+            customer.setDob(datePicker.getDate());
+            customer.setFirstTimeLogin(false);
+
+            boolean success = customerDao.updateProfile(customer);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Profile saved successfully!");
+                disableTextFields();
+                dispose(); // close profile window
+                new HomePage().setVisible(true);
+
+            } else {
+                JOptionPane.showMessageDialog(this, "Failed to save profile. Please try again.");
+            }
         }
     }
 

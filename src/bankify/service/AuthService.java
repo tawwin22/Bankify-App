@@ -1,23 +1,37 @@
 package bankify.service;
 
-import bankify.dao.UserDao;
+import bankify.Customer;
+import bankify.dao.CustomerDao;
 
 public class AuthService {
-    private UserDao userDAO = new UserDao();
+    private CustomerDao customerDao;
 
-    public boolean register(String first_name, String last_name, String email, String password) {
-        if (first_name == null || last_name == null || email == null || password == null ||
-            first_name.isEmpty() || last_name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            return false;
-        }
-        return userDAO.register(first_name, last_name, email, password);
+    public AuthService(CustomerDao customerDao) {
+        this.customerDao = customerDao;
     }
 
-    public boolean authenticate(String email, String password) {
-        if (email == null || password == null ||
-            email.isEmpty() || password.isEmpty()) {
+    // Register a new customer
+    public boolean register(Customer customer) {
+        if (customer == null ||
+            customer.getFirstName() == null || customer.getFirstName().isEmpty() ||
+            customer.getLastName() == null || customer.getLastName().isEmpty() ||
+            customer.getEmail() == null || customer.getEmail().isEmpty() ||
+            customer.getPassword() == null || customer.getPassword().isEmpty()) {
             return false;
         }
-        return userDAO.login(email, password);
+
+        // Always mark new users as first-time login
+        customer.setFirstTimeLogin(true);
+
+        return customerDao.register(customer);
+    }
+
+    // Authenticate and return the Customer object
+    public Customer authenticate(String email, String password) {
+        if (email == null || password == null ||
+            email.isEmpty() || password.isEmpty()) {
+            return null;
+        }
+        return customerDao.findByEmailAndPassword(email, password);
     }
 }

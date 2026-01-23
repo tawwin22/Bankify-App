@@ -3,8 +3,10 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.border.EmptyBorder;
-import bankify.dao.UserDao;
+
 import bankify.service.AuthService;
+import bankify.Customer;
+import bankify.dao.CustomerDao;
 
 public class Login extends JFrame {
 
@@ -223,6 +225,9 @@ public class Login extends JFrame {
             String email = txtUserName.getText().trim();
             String password = new String(pwtPassword.getPassword()).trim();
 
+            CustomerDao dao = new CustomerDao(DBConnection.getConnection());
+            AuthService auth = new AuthService(dao);
+
             // Clear previous errors
             errEmail.setText("");
             errPass.setText("");
@@ -238,25 +243,28 @@ public class Login extends JFrame {
                 hasError = true;
             }
 
-            if (hasError) return;
+            if (!hasError) {
+                Customer customer = auth.authenticate(email, password);
 
-            AuthService auth = new AuthService();
-            if (auth.authenticate(email, password)) {
-                dispose();
-                new HomePage().setVisible(true);
-            } else {
-                errPass.setText("Invalid email or password!");
+                if (customer != null) {
+                    dispose();
+                    if (customer.isFirstTimeLogin()) {
+                        // First-time user → must complete profile
+                        new MyProfile(customer, dao).setVisible(true);
+                    } else {
+                        // Returning user → go straight to homepage
+                    	new HomePage().setVisible(true);
+                    }
+                } else {
+                    errPass.setText("Invalid email or password!");
+                }
             }
-            
-        });
+        }); // ✅ close btnLogin lambda properly
 
         btnSignUp.addActionListener(e -> {
             dispose();
             new Register().setVisible(true);
         });
-    }
-
-    public static void main(String[] args) {
-        EventQueue.invokeLater(() -> new Login().setVisible(true));
+        
     }
 }

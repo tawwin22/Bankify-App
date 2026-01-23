@@ -8,8 +8,10 @@ import javax.swing.border.CompoundBorder;
 import java.awt.event.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher; 
+
 import bankify.service.AuthService;
-import bankify.dao.UserDao;
+import bankify.dao.CustomerDao;
+import bankify.Customer;
 
 public class Register extends JFrame {
 
@@ -233,13 +235,23 @@ public class Register extends JFrame {
                 else if (!pass.equals(cpass)) { errConfirm.setText("Passwords do not match!"); hasError = true; }
 
                 if (!hasError) {
-                    AuthService auth = new AuthService();
-                    boolean success = auth.register(firstName, lastName, gmail, pass);
+                    CustomerDao dao = new CustomerDao(DBConnection.getConnection());
+                    AuthService auth = new AuthService(dao);
+
+                    Customer newCustomer = new Customer();
+                    newCustomer.setFirstName(firstName);
+                    newCustomer.setLastName(lastName);
+                    newCustomer.setEmail(gmail);
+                    newCustomer.setPassword(pass);
+                    newCustomer.setFirstTimeLogin(true); // mark as first-time
+
+                    boolean success = auth.register(newCustomer);
 
                     if (success) {
                         JOptionPane.showMessageDialog(null, "Registration Successful!");
                         dispose();
-                        new MyProfile().setVisible(true);
+                        // Pass the customer object into MyProfile so it auto-fills
+                        new MyProfile(newCustomer, dao).setVisible(true);
                     } else {
                         JOptionPane.showMessageDialog(null, "Registration failed. Try again.");
                     }
