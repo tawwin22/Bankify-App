@@ -33,7 +33,7 @@ public class HomePage extends JFrame {
 
     private JPanel createContentPanel() {
         JPanel contentPanel = new JPanel();
-        contentPanel.setBackground(new Color(30,127,179));
+        contentPanel.setBackground(new Color(30, 127, 179));
         contentPanel.setLayout(null);
 
         // User Panel (Size adjusted for 1200 width)
@@ -54,12 +54,33 @@ public class HomePage extends JFrame {
         JLabel userLabel = new JLabel("Aung Aung");
         userLabel.setBounds(70, 22, 140, 35);
         userLabel.setForeground(Color.WHITE);
-        userLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22)); // Increased Font Size
+        userLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22));
         userPanel.add(userLabel);
+
+        // Phone Number Panel
+        RoundedPanel phonePanel = new RoundedPanel();
+        phonePanel.setBounds(70, 165, 250, 80); // Adjusted position
+        phonePanel.setBackground(new Color(0, 191, 255));
+        phonePanel.setLayout(null);
+
+        JLabel phoneIcon = new JLabel();
+        phoneIcon.setBounds(20, 22, 95, 40);
+        URL phoneIconURL = getClass().getResource("/Resources/phone.png");
+        if (phoneIconURL != null) {
+            Image img = new ImageIcon(phoneIconURL).getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+            phoneIcon.setIcon(new ImageIcon(img));
+        } 
+        phonePanel.add(phoneIcon);
+
+        JLabel phoneLabel = new JLabel("+959123456789");
+        phoneLabel.setBounds(70, 25, 165, 35);
+        phoneLabel.setForeground(Color.WHITE);
+        phoneLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22));
+        phonePanel.add(phoneLabel);
 
         // Balance Panel
         RoundedPanel balancePanel = new RoundedPanel();
-        balancePanel.setBounds(70, 200, 470, 80);
+        balancePanel.setBounds(70, 260, 470, 80);
         balancePanel.setBackground(new Color(0, 191, 255));
         balancePanel.setLayout(null);
 
@@ -75,7 +96,7 @@ public class HomePage extends JFrame {
         balanceLabel = new JLabel("Account Balance: " + String.format("%.2f", balanceAmount) + " MMK");
         balanceLabel.setBounds(75, 22, 370, 35);
         balanceLabel.setForeground(Color.WHITE);
-        balanceLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22)); // Increased Font Size
+        balanceLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22));
         balancePanel.add(balanceLabel);
 
         JButton eyeButton = new JButton();
@@ -101,7 +122,9 @@ public class HomePage extends JFrame {
         balancePanel.add(eyeButton);
 
         contentPanel.add(userPanel);
+        contentPanel.add(phonePanel);  // Added phone panel
         contentPanel.add(balancePanel);
+        
         
         // --- Buttons Section ---
         // Deposit
@@ -213,4 +236,5 @@ public class HomePage extends JFrame {
             frame.setVisible(true);
         });
     }
+
 }
