@@ -50,6 +50,28 @@ public class TransferPage extends JFrame {
         userPanel.add(lblUserName);
         panel.add(userPanel);
 
+     // Phone Number Panel 
+        JPanel phonePanel = createRoundedPanel(new Color(0, 191, 255));  
+        phonePanel.setBounds(320, 50, 470, 80); // Adjusted position
+        phonePanel.setBackground(new Color(0, 191, 255));
+        phonePanel.setLayout(null);
+
+        JLabel phoneIcon = new JLabel();
+        phoneIcon.setBounds(20, 22, 95, 40);
+        URL phoneIconURL = getClass().getResource("/Resources/phone.png");
+        if (phoneIconURL != null) {
+            Image img = new ImageIcon(phoneIconURL).getImage().getScaledInstance(40, 40, Image.SCALE_SMOOTH);
+            phoneIcon.setIcon(new ImageIcon(img));
+        } 
+        phonePanel.add(phoneIcon);
+
+        JLabel phoneLabel = new JLabel("Your Phone Number: +959123456789");
+        phoneLabel.setBounds(70, 25, 395, 35);
+        phoneLabel.setForeground(Color.WHITE);
+        phoneLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22));
+        phonePanel.add(phoneLabel);
+
+
         // Account Balance Section
         JPanel balancePanel = createRoundedPanel(new Color(0, 191, 255));
         balancePanel.setBounds(70,160,470, 80); // Size increased
@@ -86,21 +108,68 @@ public class TransferPage extends JFrame {
             });
         }
         balancePanel.add(eyeButton);
+        panel.add(phonePanel);
         panel.add(balancePanel);
-
+        
         // Labels and Inputs with larger fonts
         addLabel(panel, "To", 70, 265, 20); // Label font size increased to 20
+
+        // +95 TextField 
+        JTextField txtCountryCode = new JTextField("+95");
+        txtCountryCode.setBounds(70, 305, 60, 55);
+        txtCountryCode.setFont(new Font("Tw Cen MT", Font.BOLD, 18));
+        txtCountryCode.setForeground(Color.BLACK);
+        txtCountryCode.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 5));
+        txtCountryCode.setEditable(false); 
+        txtCountryCode.setFocusable(false); // focus 
+        panel.add(txtCountryCode);
+
+        // Phone number TextField
         txtTo = new JTextField();
-        txtTo.setBounds(70, 305, 600, 55);
+        txtTo.setBounds(130, 305, 540, 55); // +95 field 
         txtTo.setFont(new Font("Tw Cen MT", Font.PLAIN, 18));
         txtTo.setForeground(Color.GRAY);
         txtTo.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
-        txtTo.setText("Enter ID");
+        txtTo.setText("Enter Phone Number");
         txtTo.addFocusListener(new FocusListener() {
-            public void focusGained(FocusEvent e) { if (txtTo.getText().equals("Enter ID")) { txtTo.setText(""); txtTo.setForeground(Color.BLACK); } }
-            public void focusLost(FocusEvent e) { if (txtTo.getText().isEmpty()) { txtTo.setText("Enter ID"); txtTo.setForeground(Color.GRAY); } }
+            public void focusGained(FocusEvent e) { 
+                if (txtTo.getText().equals("Enter Phone Number")) { 
+                    txtTo.setText(""); 
+                    txtTo.setForeground(Color.BLACK); 
+                } 
+            }
+            public void focusLost(FocusEvent e) { 
+                if (txtTo.getText().isEmpty()) { 
+                    txtTo.setText("Enter Phone Number"); 
+                    txtTo.setForeground(Color.GRAY); 
+                }
+            }
         });
+
+        // Phone number validation - 10 digits only
+        txtTo.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                char c = e.getKeyChar();
+                
+                
+                if (!Character.isDigit(c) && 
+                    c != KeyEvent.VK_BACK_SPACE && 
+                    c != KeyEvent.VK_DELETE) {
+                    e.consume();
+                    return;
+                }
+                
+                // 10 digits 
+                String currentText = txtTo.getText();
+                if (currentText.length() >= 10 && txtTo.getSelectedText() == null) {
+                    e.consume();
+                }
+            }
+        });
+
         panel.add(txtTo);
+
 
         addLabel(panel, "Amount", 70, 375, 20);
         txtAmount = new JTextField();
@@ -149,13 +218,37 @@ public class TransferPage extends JFrame {
 
     // ================= Transfer Logic =================
     private void handleTransfer() {
-        String to = txtTo.getText().trim();
+        String phoneNumber = txtTo.getText().trim();
         String amountStr = txtAmount.getText().trim();
 
-        if (to.isEmpty() || to.equals("Enter ID")) {
-            JOptionPane.showMessageDialog(this, "Please enter recipient ID.");
-            txtTo.requestFocus(); return;
+        // Validation
+        if (phoneNumber.isEmpty() || phoneNumber.equals("Enter Phone Number")) {
+            JOptionPane.showMessageDialog(this, "Please enter recipient Phone Number.");
+            txtTo.requestFocus(); 
+            return;
         }
+        
+        // Phone number validation - 10 digits only
+        if (phoneNumber.length() != 10) {
+            JOptionPane.showMessageDialog(this, "Phone number must be 10 digits.");
+            txtTo.requestFocus();
+            return;
+        }
+        
+        
+        if (!phoneNumber.matches("\\d{10}")) {
+            JOptionPane.showMessageDialog(this, "Please enter a valid 10-digit phone number.");
+            txtTo.requestFocus();
+            return;
+        }
+        
+        // Complete phone number with +95
+        String to = "+95" + phoneNumber;
+        if (amountStr.isEmpty() || amountStr.equals("0")) {
+            JOptionPane.showMessageDialog(this, "Please enter amount.");
+            txtAmount.requestFocus(); return;
+        }
+
         if (amountStr.isEmpty() || amountStr.equals("0")) {
             JOptionPane.showMessageDialog(this, "Please enter amount.");
             txtAmount.requestFocus(); return;
@@ -245,4 +338,5 @@ public class TransferPage extends JFrame {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new TransferPage().setVisible(true));
     }
+
 }
