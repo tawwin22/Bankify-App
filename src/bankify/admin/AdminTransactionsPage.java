@@ -198,7 +198,7 @@ public class AdminTransactionsPage extends JFrame {
         
         toolbarPanel.add(searchPanel);
         toolbarPanel.add(filterPanel);
-        toolbarPanel.add(buttonPanel);
+    
         
         return toolbarPanel;
     }
@@ -548,4 +548,5 @@ public class AdminTransactionsPage extends JFrame {
     }
 
 }
+
 
