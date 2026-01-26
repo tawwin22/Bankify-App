@@ -45,6 +45,7 @@ public class MyProfile extends JFrame {
         getContentPane().add(sidebar, BorderLayout.WEST);
         getContentPane().add(contentPanel, BorderLayout.CENTER);
     }
+
  // New constructor for first-time login profile setup
     public MyProfile(Customer customer, CustomerDao customerDao) {
         this(); // call default constructor to build UI
@@ -60,10 +61,6 @@ public class MyProfile extends JFrame {
         textField_4.setText(customer.getEmail());
         textField_4.setEditable(false);
     }
-   
-        
-    
-
 
     private JPanel createContentPanel() {
         JPanel contentPanel = new JPanel();
@@ -228,14 +225,12 @@ public class MyProfile extends JFrame {
         lblPhone.setForeground(Color.WHITE);
         lblPhone.setBounds(column2X, 440, 150, 30);
         contentPanel.add(lblPhone);
-
         
         JPanel phoneContainer = new JPanel();
         phoneContainer.setBounds(column2X, 480, fieldWidth, fieldHeight);
         phoneContainer.setLayout(new BorderLayout());
         phoneContainer.setBackground(contentPanel.getBackground());
 
-        
         JPanel countryCodePanel = new JPanel();
         countryCodePanel.setLayout(new BorderLayout());
         countryCodePanel.setPreferredSize(new Dimension(60, fieldHeight));
@@ -276,7 +271,6 @@ public class MyProfile extends JFrame {
                 }
             }
         });
-
        
         textField_5.addFocusListener(new java.awt.event.FocusAdapter() {
             @Override
@@ -298,13 +292,16 @@ public class MyProfile extends JFrame {
                 }
             }
         });
+
         phoneContainer.add(countryCodePanel, BorderLayout.WEST);
         phoneContainer.add(textField_5, BorderLayout.CENTER);
         contentPanel.add(phoneContainer);
 
-    
-        
-        
+        err6 = new JLabel("");
+        err6.setForeground(errorColor);
+        err6.setFont(errorFont);
+        err6.setBounds(column1X, 525, fieldWidth, 25);
+        contentPanel.add(err6);
 
         // --- Buttons ---
         JButton btnEdit = new RoundedCornerButton("Edit");
