@@ -4,6 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.util.List;
+import java.sql.*;
+import bankify.DBConnection;
+import bankify.dao.CustomerDao;
+import bankify.Customer;
+import bankify.dao.AccountDao;
 
 public class HomePage extends JFrame {
 
@@ -11,9 +17,16 @@ public class HomePage extends JFrame {
     private JPanel contentPanel;
     private JLabel balanceLabel;
     private boolean balanceVisible = true;
-    private double balanceAmount = 100000.00;
+    private double balanceAmount = 0.00;
+    private Customer customer;
+    private CustomerDao customerDao;
+    private Account account;
+    private AccountDao accountDao;
 
-    public HomePage() {
+    public HomePage(Customer customer, CustomerDao customerDao) {
+    	this.customer = customer ;
+    	this.customerDao = customerDao;
+    	this.accountDao = new AccountDao(DBConnection.getConnection());
         setTitle("Bankify - Home Page");
         // Screen size updated to 1200x800
         setSize(1200, 800);
@@ -22,7 +35,7 @@ public class HomePage extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Home");
+        Sidebar sidebar = new Sidebar(this, "Home",customer, customerDao);
 
         // Content
         contentPanel = createContentPanel();
@@ -51,7 +64,7 @@ public class HomePage extends JFrame {
         }
         userPanel.add(userIcon);
 
-        JLabel userLabel = new JLabel("Aung Aung");
+        JLabel userLabel = new JLabel(customer.getFirstName()+""+customer.getLastName());
         userLabel.setBounds(70, 22, 140, 35);
         userLabel.setForeground(Color.WHITE);
         userLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22));
@@ -72,7 +85,7 @@ public class HomePage extends JFrame {
         } 
         phonePanel.add(phoneIcon);
 
-        JLabel phoneLabel = new JLabel("Your Phone Number: +959123456789");
+        JLabel phoneLabel = new JLabel("Your Phone Number: "+ customer.getPhoneNumber());
         phoneLabel.setBounds(70, 25, 395, 35);
         phoneLabel.setForeground(Color.WHITE);
         phoneLabel.setFont(new Font("Tw Cen MT", Font.BOLD, 22));
@@ -93,7 +106,19 @@ public class HomePage extends JFrame {
             balanceIcon.setIcon(new ImageIcon(img));
         }
         balancePanel.add(balanceIcon);
-
+        
+     // Fetch balance from DB
+        List<Account> accounts = null;
+        try {
+            accounts = accountDao.getAccountsByCustomerId(customer.getCustomerId());
+            if (!accounts.isEmpty()) {
+                balanceAmount = accounts.get(0).getBalance();
+                balanceLabel.setText("Account Balance: " + String.format("%.2f", balanceAmount) + " MMK");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // or show an error dialog
+            balanceLabel.setText("Account Balance: Error loading");
+        }
         balanceLabel = new JLabel("Account Balance: " + String.format("%.2f", balanceAmount) + " MMK");
         balanceLabel.setBounds(75, 22, 370, 35);
         balanceLabel.setForeground(Color.WHITE);
@@ -230,11 +255,9 @@ public class HomePage extends JFrame {
             super.paintComponent(g);
         }
     }
-
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            HomePage frame = new HomePage();
-            frame.setVisible(true);
+            new Login().setVisible(true);
         });
     }
 

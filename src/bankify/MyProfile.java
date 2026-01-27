@@ -39,7 +39,7 @@ public class MyProfile extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings");
+        Sidebar sidebar = new Sidebar(this, "Settings",customer, customerDao);
         contentPanel = createContentPanel();
 
         getContentPane().add(sidebar, BorderLayout.WEST);
@@ -368,7 +368,7 @@ public class MyProfile extends JFrame {
                 JOptionPane.showMessageDialog(this, "Profile saved successfully!");
                 disableTextFields();
                 dispose(); // close profile window
-                new HomePage().setVisible(true);
+                new HomePage(customer,customerDao).setVisible(true);
 
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to save profile. Please try again.");
@@ -410,8 +410,6 @@ public class MyProfile extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new MyProfile().setVisible(true));
-    }
+  
 
 }

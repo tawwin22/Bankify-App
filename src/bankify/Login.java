@@ -253,7 +253,7 @@ public class Login extends JFrame {
                         new MyProfile(customer, dao).setVisible(true);
                     } else {
                         // Returning user → go straight to homepage
-                    	new HomePage().setVisible(true);
+                    	new HomePage(customer, dao).setVisible(true);
                     }
                 } else {
                     errPass.setText("Invalid email or password!");

@@ -4,12 +4,19 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import bankify.DBConnection;
+import bankify.Customer;
+import bankify.dao.CustomerDao;
 
 public class Sidebar extends JPanel {
     private JFrame parentFrame;
     private String activePage; // Track which page is active
+    private Customer customer;
+    private CustomerDao customerDao;
 
-    public Sidebar(JFrame parentFrame, String activePage) {
+    public Sidebar(JFrame parentFrame, String activePage ,Customer customer, CustomerDao customerDao) {
+    	this.customer = customer;
+    	this.customerDao = customerDao;
         this.parentFrame = parentFrame;
         this.activePage = activePage;
 
@@ -88,7 +95,7 @@ public class Sidebar extends JPanel {
 
         // Action Listeners for navigation
         btn.addActionListener(e -> {
-            if (text.equals("Home")) navigate(new HomePage());
+            if (text.equals("Home")) navigate(new HomePage( customer,customerDao));
             else if (text.equals("Deposit")) navigate(new DepositPage());
             else if (text.equals("Withdraw")) navigate(new WithdrawPage());
             else if (text.equals("Transfer")) navigate(new TransferPage());

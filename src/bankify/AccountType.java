@@ -4,13 +4,18 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import bankify.dao.CustomerDao;
 
 public class AccountType extends JFrame {
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPanel;
+    private Customer customer;
+    private CustomerDao customerDao;
 
-    public AccountType() {
+    public AccountType(Customer customer, CustomerDao customerDao) {
+    	this.customer = customer;
+    	this.customerDao = customerDao;
         setTitle("Bankify - Account Type");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -18,7 +23,7 @@ public class AccountType extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings");
+        Sidebar sidebar = new Sidebar(this, "Settings",customer, customerDao);
 
         // Content
         contentPanel = createContentPanel();
@@ -217,7 +222,7 @@ public class AccountType extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            AccountType frame = new AccountType();
+            AccountType frame = new AccountType(customer, customerDao);
             frame.setVisible(true);
         });
     }
