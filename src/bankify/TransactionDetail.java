@@ -7,15 +7,19 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.sql.Connection;
 
 public class TransactionDetail extends JPanel {
     private Customer customer;
     private CustomerDao customerDao;
+    private static Connection conn;
 
     // ===== FIXED constructor: added customer and customerDao parameters =====
-    public TransactionDetail(Transaction tx, CardLayout cardLayout, JPanel contentPanel, Customer customer, CustomerDao customerDao) {
+    public TransactionDetail(Transaction tx, CardLayout cardLayout, JPanel contentPanel, Customer customer,
+                             CustomerDao customerDao, Connection connection) {
         this.customer = customer;
         this.customerDao = customerDao;
+        conn = connection;
 
         setLayout(new BorderLayout());
         setBackground(new Color(235, 238, 242));
@@ -23,7 +27,7 @@ public class TransactionDetail extends JPanel {
         // Get the top-level window (JFrame) to pass to the sidebar
         SwingUtilities.invokeLater(() -> {
             JFrame parentFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
-            Sidebar sidebar = new Sidebar(parentFrame, "Transactions", customer, customerDao);
+            Sidebar sidebar = new Sidebar(parentFrame, "Transactions", customer, customerDao, conn);
             add(sidebar, BorderLayout.WEST);
             revalidate();
             repaint();
@@ -100,9 +104,17 @@ public class TransactionDetail extends JPanel {
         gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.4;
         detailsPanel.add(createDetailLabel("Amount:", true, 20), gbc);
         gbc.gridx = 1; gbc.weightx = 0.6;
-        JLabel amountLabel = createDetailLabel(String.format("%,.2f", tx.getAmount()) + " MMK", false, 28);
-        amountLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+
+        String plus_minus = null;
         if (tx.getTransactionType().equalsIgnoreCase("Deposit") || tx.getTransactionType().equalsIgnoreCase("Receive")) {
+            plus_minus = "+";
+        } else {
+            plus_minus = "-";
+        }
+
+        JLabel amountLabel = createDetailLabel(plus_minus + String.format("%,.2f", tx.getAmount()) + " MMK", false, 28);
+        amountLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        if (plus_minus.equals("+")) {
             amountLabel.setForeground(new Color(0, 150, 0));
         } else {
             amountLabel.setForeground(new Color(200, 0, 0));
@@ -223,9 +235,10 @@ public class TransactionDetail extends JPanel {
 
             Transaction tx = new Transaction();
             Customer customer = new Customer();       // pass real customer
-            CustomerDao customerDao = new CustomerDao(DBConnection.getConnection());
+            CustomerDao customerDao = new CustomerDao(conn);
 
-            contentPanel.add(new TransactionDetail(tx, cardLayout, contentPanel, customer, customerDao), "Detail");
+            contentPanel.add(new TransactionDetail(tx, cardLayout, contentPanel, customer, customerDao, conn),
+                    "Detail");
 
             frame.add(contentPanel);
             frame.setLocationRelativeTo(null);

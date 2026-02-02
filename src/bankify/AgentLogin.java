@@ -3,11 +3,11 @@ package bankify;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import javax.swing.border.EmptyBorder;
 
 import bankify.dao.AgentDao;
 import bankify.service.AuthService;
-import bankify.Customer;
 import bankify.dao.CustomerDao;
 
 public class AgentLogin extends JFrame {
@@ -16,6 +16,7 @@ public class AgentLogin extends JFrame {
     private JTextField txtAgentID;
     private JPasswordField pwtPassword;
     private boolean showPassword = false;
+    private static Connection conn;
 
     // Error Labels
     private JLabel errEmail, errPass;
@@ -40,6 +41,7 @@ public class AgentLogin extends JFrame {
      * Create the frame.
      */
     public AgentLogin() {
+        conn = DBConnection.getConnection();
         setTitle("Bankify - Agent Portal");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 650);
@@ -267,7 +269,7 @@ public class AgentLogin extends JFrame {
             // NOTE: Using CustomerDao for now. 
             // In a real app, use AgentDao/AgentService here.
             CustomerDao dao = new CustomerDao(DBConnection.getConnection());
-            AuthService auth = new AuthService(dao);
+            AuthService auth = new AuthService(dao, conn);
 
             errEmail.setText("");
             errPass.setText("");
@@ -291,7 +293,7 @@ public class AgentLogin extends JFrame {
                     dispose();
                     // Open Agent Dashboard here
                     JOptionPane.showMessageDialog(null, "Agent Login Successful!");
-                    new AgentRequestListPage(agent, agentDao).setVisible(true);
+                    new AgentRequestListPage(agent, agentDao, conn).setVisible(true);
                 } else {
                     errPass.setText("Access Denied: Invalid Credentials");
                 }

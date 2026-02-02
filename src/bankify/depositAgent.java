@@ -1,11 +1,14 @@
 package bankify;
 
+import bankify.dao.AccountDao;
 import bankify.dao.AgentDao;
 import bankify.dao.MoneyRequestDao;
 
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class depositAgent extends JFrame {
 
@@ -13,12 +16,14 @@ public class depositAgent extends JFrame {
     private static AgentDao agentDao;
     MoneyRequestDao moneyRequestDao;
     private static MoneyRequestDao.RequestItem item;
+    private static Connection conn;
 
-    public depositAgent(MoneyRequestDao.RequestItem item, Agent agent, AgentDao agentDao) {
-        this.moneyRequestDao = new MoneyRequestDao(DBConnection.getConnection());
+    public depositAgent(MoneyRequestDao.RequestItem item, Agent agent, AgentDao agentDao, Connection connection) {
         depositAgent.item = item;
         depositAgent.agent = agent;
         depositAgent.agentDao = agentDao;
+        conn = connection;
+        this.moneyRequestDao = new MoneyRequestDao(conn);
         setupFrame();
     }
 
@@ -51,7 +56,7 @@ public class depositAgent extends JFrame {
         btnBack.setBounds(pillX - 150, pillY + 5, 50, 50);
         btnBack.setContentAreaFilled(false); btnBack.setBorderPainted(false);
         btnBack.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnBack.addActionListener(e -> { dispose(); new AgentRequestListPage(agent, agentDao).setVisible(true); });
+        btnBack.addActionListener(e -> { dispose(); new AgentRequestListPage(agent, agentDao, conn).setVisible(true); });
         panel.add(btnBack);
 
         // --- Agent Pill ---
@@ -87,8 +92,12 @@ public class depositAgent extends JFrame {
             int res = JOptionPane.showConfirmDialog(this, "Approve this request?", "Confirm", JOptionPane.OK_CANCEL_OPTION);
             if (res == JOptionPane.OK_OPTION) {
                 dispose();
-                acceptRequest();
-                new AgentRequestListPage(agent, agentDao).setVisible(true);
+                try {
+                    acceptRequest();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+                new AgentRequestListPage(agent, agentDao, conn).setVisible(true);
             }
         });
         panel.add(btnAccept);
@@ -100,7 +109,7 @@ public class depositAgent extends JFrame {
             if (res == JOptionPane.OK_OPTION) {
                 dispose();
                 denyRequest();
-                new AgentRequestListPage(agent, agentDao).setVisible(true);
+                new AgentRequestListPage(agent, agentDao, conn).setVisible(true);
             }
         });
         panel.add(btnDeny);
@@ -143,10 +152,18 @@ public class depositAgent extends JFrame {
         }
     }
 
-    private void acceptRequest() {
+    private void acceptRequest() throws SQLException {
         if (item.status.equals("PENDING")) {
-        this.moneyRequestDao.acceptOrDenyRequest(item.request_id, "ACCEPT");
-        new depositAgent(item, agent, agentDao);
+            Agent a = agentDao.findById(item.agent_id);
+            AccountDao accountDao = new AccountDao(conn);
+            Account agent_acc = accountDao.getAccountByAgentId(a.getAgentId());
+            if (agent_acc.getBalance() >= item.amount) {
+                this.moneyRequestDao.acceptOrDenyRequest(item.request_id, "ACCEPT");
+            }
+            else {
+                JOptionPane.showMessageDialog(null, "Your balance is insufficient!");
+            }
+        new depositAgent(item, agent, agentDao, conn);
         } else {
             JOptionPane.showMessageDialog(null, "You already done this!");
         }
@@ -155,11 +172,12 @@ public class depositAgent extends JFrame {
     private void denyRequest() {
         if (item.status.equals("PENDING")) {
             this.moneyRequestDao.acceptOrDenyRequest(item.request_id, "DENY");
-            new depositAgent(item, agent, agentDao);
+            new depositAgent(item, agent, agentDao, conn);
         } else {
             JOptionPane.showMessageDialog(null, "You already done this!");
         }
     }
 
-    public static void main(String[] args) { SwingUtilities.invokeLater(() -> new depositAgent(item, agent, agentDao).setVisible(true)); }
+    public static void main(String[] args) { SwingUtilities.invokeLater(() -> new depositAgent(item, agent, agentDao,
+            conn).setVisible(true)); }
 }

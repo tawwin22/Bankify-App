@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.Connection;
 
 public class WithdrawPage extends JFrame {
 
@@ -23,8 +24,9 @@ public class WithdrawPage extends JFrame {
     private AccountDao accountDao;
     private MoneyRequestDao moneyRequestDao;
     private boolean balanceVisible = true;
+    private static Connection conn;
 
-    public WithdrawPage(Customer customer, CustomerDao customerDao) {
+    public WithdrawPage(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -32,8 +34,9 @@ public class WithdrawPage extends JFrame {
 
         this.customer = customer ;
         this.customerDao = customerDao;
-        this.accountDao = new AccountDao(DBConnection.getConnection());
-        this.moneyRequestDao = new MoneyRequestDao(DBConnection.getConnection());
+        conn = connection;
+        this.accountDao = new AccountDao(conn);
+        this.moneyRequestDao = new MoneyRequestDao(conn);
         try {
             this.account = accountDao.getAccountByCustomerId(customer.getCustomerId());
         } catch (Exception e) {
@@ -48,7 +51,7 @@ public class WithdrawPage extends JFrame {
         setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Withdraw", customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Withdraw", customer, customerDao, conn);
         JPanel contentPanel = createWithdrawContent();
 
         add(sidebar, BorderLayout.WEST);
@@ -79,6 +82,7 @@ public class WithdrawPage extends JFrame {
 
         // Account Balance Section
         JPanel balancePanel = createRoundedPanel(new Color(0, 191, 255));
+        balancePanel.setBounds(70,160,470,80);
         balancePanel.setBounds(70,160,470,80);
         balancePanel.setLayout(null);
 
@@ -226,12 +230,12 @@ public class WithdrawPage extends JFrame {
 
             JOptionPane.showMessageDialog(this, "Your withdraw request for " + amount + " is pending...");
 
-            // Reset fields
+//             Reset fields
             txtAgent.setText("Enter ID"); txtAgent.setForeground(Color.GRAY);
             txtAmount.setText("0");
             txtDescription.setText("Optional note"); txtDescription.setForeground(Color.GRAY);
 
-            // Optionally refresh balance label
+//             Optionally refresh balance label
             if (balanceVisible) lblBalance.setText("Account Balance : " + String.format("%.2f", account.getBalance()) + " MMK");
 
         } catch (NumberFormatException ex) {
@@ -294,7 +298,15 @@ public class WithdrawPage extends JFrame {
         }
     }
 
+    public static void launch(Customer customer, CustomerDao customerDao) {
+        if (customer == null) {
+            new Login().setVisible(true);
+        } else {
+            new WithdrawPage(customer, customerDao, conn).setVisible(true);
+        }
+    }
+
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new WithdrawPage(customer, customerDao).setVisible(true));
+        SwingUtilities.invokeLater(() -> WithdrawPage.launch(customer, customerDao));
     }
 }

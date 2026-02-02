@@ -4,6 +4,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.Connection;
+
 import bankify.dao.CustomerDao;
 import bankify.service.PageGuardService;
 
@@ -13,8 +15,9 @@ public class AccountType extends JFrame {
     private JPanel contentPanel;
     private static Customer customer;
     private static CustomerDao customerDao;
+    private static Connection conn;
 
-    public AccountType(Customer customer, CustomerDao customerDao) {
+    public AccountType(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -22,6 +25,8 @@ public class AccountType extends JFrame {
 
     	this.customer = customer;
     	this.customerDao = customerDao;
+        conn = connection;
+
         setTitle("Bankify - Account Type");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -29,7 +34,7 @@ public class AccountType extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings",customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Settings",customer, customerDao, conn);
 
         // Content
         contentPanel = createContentPanel();
@@ -146,7 +151,7 @@ public class AccountType extends JFrame {
         }
         btnBack.addActionListener(e -> {
             dispose();
-            new MainSettings(customer, customerDao).setVisible(true);
+            new MainSettings(customer, customerDao, conn).setVisible(true);
         });
         contentPanel.add(btnBack);
 
@@ -156,7 +161,7 @@ public class AccountType extends JFrame {
         btnOK.setBounds(375, 460, 120, 50);
         btnOK.addActionListener(e -> {
             dispose(); // လက်ရှိ frame ကို ပိတ်မယ်
-            new MainSettings(customer, customerDao).setVisible(true); // settings_main page ကို ဖွင့်မယ်
+            new MainSettings(customer, customerDao, conn).setVisible(true); // settings_main page ကို ဖွင့်မယ်
         });
         contentPanel.add(btnOK);
 
@@ -228,7 +233,7 @@ public class AccountType extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            AccountType frame = new AccountType(customer, customerDao);
+            AccountType frame = new AccountType(customer, customerDao, conn);
             frame.setVisible(true);
         });
     }

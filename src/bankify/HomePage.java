@@ -19,8 +19,9 @@ public class HomePage extends JFrame {
     private static Customer customer;
     private static CustomerDao customerDao;
     private AccountDao accountDao;
+    private static Connection conn;
 
-    public HomePage(Customer customer, CustomerDao customerDao) {
+    public HomePage(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -28,7 +29,8 @@ public class HomePage extends JFrame {
 
     	this.customer = customer ;
     	this.customerDao = customerDao;
-    	this.accountDao = new AccountDao(DBConnection.getConnection());
+        conn = connection;
+    	this.accountDao = new AccountDao(conn);
         setTitle("Bankify - Home Page");
         // Screen size updated to 1200x800
         setSize(1200, 800);
@@ -37,7 +39,7 @@ public class HomePage extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Home",customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Home",customer, customerDao, conn);
 
         // Content
         contentPanel = createContentPanel();
@@ -199,7 +201,7 @@ public class HomePage extends JFrame {
     }
 
     private void openDepositPage() {
-        DepositPage depositPage = new DepositPage(customer, customerDao);
+        DepositPage depositPage = new DepositPage(customer, customerDao, conn);
         depositPage.setSize(1200, 800);
         depositPage.setLocationRelativeTo(null);
         depositPage.setVisible(true);
@@ -207,7 +209,7 @@ public class HomePage extends JFrame {
     }
 
     private void openWithdrawPage() {
-        WithdrawPage withdrawPage = new WithdrawPage(customer, customerDao);
+        WithdrawPage withdrawPage = new WithdrawPage(customer, customerDao, conn);
         withdrawPage.setSize(1200, 800);
         withdrawPage.setLocationRelativeTo(null);
         withdrawPage.setVisible(true);
@@ -215,7 +217,7 @@ public class HomePage extends JFrame {
     }
 
     private void openTransferPage() {
-        TransferPage transferPage = new TransferPage(customer, customerDao);
+        TransferPage transferPage = new TransferPage(customer, customerDao, conn);
         transferPage.setSize(1200, 800);
         transferPage.setLocationRelativeTo(null);
         transferPage.setVisible(true);
@@ -263,7 +265,7 @@ public class HomePage extends JFrame {
         if (customer == null) {
             new Login().setVisible(true);
         } else {
-            new HomePage(customer, customerDao).setVisible(true);
+            new HomePage(customer, customerDao, conn).setVisible(true);
         }
     }
 

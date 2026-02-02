@@ -59,7 +59,7 @@ public class CreateAgent {
 
         if (created_agent != null) {
             AccountDao accountDao = new AccountDao(conn);
-            accountDao.createAccount(created_agent);
+            accountDao.createAgentAccount(created_agent);
             System.out.println("Success! Agent ID: " + created_agent.getAgentId());
         } else {
             System.out.println("Error: Could not save agent to database.");

@@ -2,10 +2,11 @@ package bankify;
 
 import com.github.lgooddatepicker.components.DatePicker;
 import com.github.lgooddatepicker.components.DatePickerSettings;
-import javax.swing.text.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.net.URL;
+import java.sql.Connection;
 import java.time.LocalDate;
 import java.util.regex.Pattern;
 import bankify.dao.*;
@@ -23,9 +24,12 @@ public class MyProfile extends JFrame {
     // auto pass firstname lastname and email
     private Customer customer;
     private CustomerDao customerDao;
+    private final Connection conn;
 
 
-    public MyProfile() {
+    public MyProfile(Connection connection) {
+        conn = connection;
+
         setTitle("Bankify - My Profile");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -33,7 +37,7 @@ public class MyProfile extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings",customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Settings",customer, customerDao, conn);
         contentPanel = createContentPanel();
 
         getContentPane().add(sidebar, BorderLayout.WEST);
@@ -41,8 +45,8 @@ public class MyProfile extends JFrame {
     }
 
  // New constructor for first-time login profile setup
-    public MyProfile(Customer customer, CustomerDao customerDao) {
-        this(); // call default constructor to build UI
+    public MyProfile(Customer customer, CustomerDao customerDao, Connection connection) {
+        this(connection); // call default constructor to build UI
         this.customer = customer;
         this.customerDao = customerDao;
 
@@ -300,7 +304,7 @@ public class MyProfile extends JFrame {
         err6 = new JLabel("");
         err6.setForeground(errorColor);
         err6.setFont(errorFont);
-        err6.setBounds(column1X, 525, fieldWidth, 25);
+        err6.setBounds(column2X, 525, fieldWidth, 25);
         contentPanel.add(err6);
 
         // --- Buttons ---
@@ -355,6 +359,13 @@ public class MyProfile extends JFrame {
         String phone = textField_5.getText().trim();
         if (phone.isEmpty()) { err6.setText("! Phone required"); hasError = true; }
         else if (!isValidPhoneNumber(phone)) { err6.setText("! Invalid (10-15 digits)"); hasError = true; }
+        else if (isValidPhoneNumber(phone)) {
+            Customer cus = customerDao.findByPhonenumber(phone);
+            if (cus != null) {
+                err6.setText("This phone number is already used!");
+                hasError = true;
+            }
+        }
 
         if (!hasError) {
             // Update only editable fields
@@ -367,13 +378,12 @@ public class MyProfile extends JFrame {
             if (success) {
                 JOptionPane.showMessageDialog(this, "Profile saved successfully!");
                 disableTextFields();
-                AccountDao accountDao = new AccountDao(DBConnection.getConnection());
-                if (customer.isFirstTimeLogin()) {
-                accountDao.createAccount(customer);
+                AccountDao accountDao = new AccountDao(conn);
+                if (!customer.isFirstTimeLogin()) {
+                    accountDao.createCustomerAccount(customer);
                 }
                 dispose(); // close profile window
-                new HomePage(customer,customerDao).setVisible(true);
-
+                new LoadingScreen(() -> new HomePage(customer, customerDao, conn).setVisible(true)).setVisible(true);
             } else {
                 JOptionPane.showMessageDialog(this, "Failed to save profile. Please try again.");
             }

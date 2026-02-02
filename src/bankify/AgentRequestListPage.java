@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Comparator;
@@ -23,9 +24,10 @@ public class AgentRequestListPage extends JFrame {
     private JButton btnSort;
     private static Agent agent;
     private static AgentDao agentDao;
-    MoneyRequestDao moneyRequestDao = new MoneyRequestDao(DBConnection.getConnection());
+    private static Connection conn;
+    private static MoneyRequestDao moneyRequestDao;
 
-    public AgentRequestListPage(Agent agent, AgentDao agentDao) {
+    public AgentRequestListPage(Agent agent, AgentDao agentDao, Connection connection) {
         if (agent == null) {
             PageGuardService.checkSession(this, agent);
             return;
@@ -33,6 +35,8 @@ public class AgentRequestListPage extends JFrame {
 
         this.agent = agent;
         this.agentDao = agentDao;
+        conn = connection;
+        moneyRequestDao = new MoneyRequestDao(conn);
 
         setTitle("Bankify - Request List");
         setSize(1200, 800);
@@ -195,7 +199,7 @@ public class AgentRequestListPage extends JFrame {
                     dispose();
                     // depositAgent constructor တွင် amount ပါ ထည့်ပေးရပါမည်
 //                    new depositAgent(item.customerName, item.requested_at, String.format("%,.0f", item.amount)).setVisible(true);
-                    new depositAgent(item, agent, agentDao).setVisible(true);
+                    new depositAgent(item, agent, agentDao, conn).setVisible(true);
                 }
             });
             listContainer.add(itemPanel);
@@ -271,7 +275,7 @@ public class AgentRequestListPage extends JFrame {
         if (agent == null) {
             new AgentLogin().setVisible(true);
         } else {
-            new AgentRequestListPage(agent, agentDao).setVisible(true);
+            new AgentRequestListPage(agent, agentDao, conn).setVisible(true);
         }
     }
 

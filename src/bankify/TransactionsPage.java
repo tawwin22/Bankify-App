@@ -22,11 +22,12 @@ public class TransactionsPage extends JPanel {
 
     private static Customer customer;
     private static CustomerDao customerDao;
+    private static Connection conn;
 
     // NOTE: Removed 'transactionDao' as a field. We only create it when needed.
 
     public TransactionsPage(CardLayout cardLayout, JPanel contentPanel, JFrame parentFrame, Customer customer,
-                            CustomerDao customerDao) {
+                            CustomerDao customerDao, Connection connection) throws SQLException {
         // 1. Session Guard
         if (customer == null) {
             if (parentFrame != null) parentFrame.dispose();
@@ -37,13 +38,14 @@ public class TransactionsPage extends JPanel {
         // 2. Setup Global State
         TransactionsPage.customer = customer;
         TransactionsPage.customerDao = customerDao;
+        conn = connection;
 
         // 3. UI Setup
         setLayout(new BorderLayout());
         setBackground(new Color(30, 127, 179));
 
         // 4. Sidebar
-        Sidebar sidebar = new Sidebar(parentFrame, "Transactions", customer, customerDao);
+        Sidebar sidebar = new Sidebar(parentFrame, "Transactions", customer, customerDao, conn);
         add(sidebar, BorderLayout.WEST);
 
         // 5. Main Content
@@ -80,7 +82,7 @@ public class TransactionsPage extends JPanel {
         });
     }
 
-    private JPanel createMainContent(CardLayout cardLayout, JPanel contentPanel) {
+    private JPanel createMainContent(CardLayout cardLayout, JPanel contentPanel) throws SQLException {
         JPanel mainPanel = new JPanel();
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
         mainPanel.setBackground(new Color(30, 127, 179));
@@ -103,12 +105,9 @@ public class TransactionsPage extends JPanel {
         List<Transaction> dbTransactions = new ArrayList<>();
 
         // Try-with-resources: Automatically closes Connection when done.
-        try (Connection conn = DBConnection.getConnection()) {
+        if (conn != null) {
             TransactionDao dao = new TransactionDao(conn);
             dbTransactions = dao.getAllTransactionByCustomer(customer.getCustomerId());
-        } catch (SQLException e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Error loading transactions: " + e.getMessage());
         }
         // --- END DATA LOGIC ---
 
@@ -214,7 +213,8 @@ public class TransactionsPage extends JPanel {
         panel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 try {
-                    TransactionDetail detail = new TransactionDetail(tx, cl, mainContainer, customer, customerDao);
+                    TransactionDetail detail = new TransactionDetail(tx, cl, mainContainer, customer, customerDao,
+                            conn);
                     mainContainer.add(detail, "Detail");
                     cl.show(mainContainer, "Detail");
                 } catch (Exception ex) {
@@ -277,7 +277,7 @@ public class TransactionsPage extends JPanel {
     // --- LAUNCHER LOGIC ---
 
     public static void launch(CardLayout cardLayout, JPanel contentPanel, JFrame parentFrame, Customer customer,
-                              CustomerDao customerDao) {
+                              CustomerDao customerDao) throws SQLException {
         if (customer == null) {
             if (parentFrame != null) parentFrame.dispose();
             new Login().setVisible(true);
@@ -286,7 +286,8 @@ public class TransactionsPage extends JPanel {
             contentPanel.removeAll();
 
             // 2. Create new Page
-            TransactionsPage page = new TransactionsPage(cardLayout, contentPanel, parentFrame, customer, customerDao);
+            TransactionsPage page = new TransactionsPage(cardLayout, contentPanel, parentFrame, customer, customerDao
+                    , conn);
             contentPanel.add(page, "Transactions");
 
             // 3. FORCE SHOW the card (Fixes "Empty Window" bug)
@@ -317,7 +318,11 @@ public class TransactionsPage extends JPanel {
             CardLayout cl = new CardLayout();
             JPanel cp = new JPanel(cl);
 
-            TransactionsPage.launch(cl, cp, frame, customer, customerDao);
+            try {
+                TransactionsPage.launch(cl, cp, frame, customer, customerDao);
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         });
     }
 }

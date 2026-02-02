@@ -135,7 +135,6 @@ public class TransferDao {
             } finally {
                 try {
                     conn.setAutoCommit(true);
-                    conn.close();
                 } catch (SQLException ignored) {}
             }
         }

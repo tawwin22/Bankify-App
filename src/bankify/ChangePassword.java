@@ -12,10 +12,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.Connection;
 
 public class ChangePassword extends JFrame {
     private static Customer customer;
     private static CustomerDao customerDao;
+    private static Connection conn;
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPanel;
@@ -25,7 +27,7 @@ public class ChangePassword extends JFrame {
  // Error & Success Labels
     private JLabel errCurrent, errNew, errConfirm, successLabel;
 
-    public ChangePassword(Customer customer, CustomerDao customerDao) {
+    public ChangePassword(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -33,6 +35,7 @@ public class ChangePassword extends JFrame {
 
         this.customer = customer;
         this.customerDao = customerDao;
+        conn = connection;
 
         setTitle("Bankify - Change Password");
         // Screen Size ပြောင်းလဲခြင်း
@@ -42,7 +45,7 @@ public class ChangePassword extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
      // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings", customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Settings", customer, customerDao, conn);
 
         // Content
         contentPanel = createContentPanel();
@@ -204,7 +207,8 @@ public class ChangePassword extends JFrame {
             // 4️⃣ Save new password if no errors
             if (!hasError) {
                 try {
-                    AuthService auth = new AuthService(customerDao); // calls CustomerDao.updatePassword internally
+                    AuthService auth = new AuthService(customerDao, conn); // calls CustomerDao.updatePassword
+                    // internally
                     auth.changePassword(customer.getCustomerId(), current, newPass);
 
                     successLabel.setText("Password changed successfully!");
@@ -321,7 +325,7 @@ public class ChangePassword extends JFrame {
         if (customer == null) {
             new Login().setVisible(true);
         } else {
-            new ChangePassword(customer, customerDao).setVisible(true);
+            new ChangePassword(customer, customerDao, conn).setVisible(true);
         }
     }
 

@@ -14,7 +14,7 @@ public class AccountDao {
         this.conn = conn;
     }
 
-    public boolean createAccount(Customer customer) {
+    public boolean createCustomerAccount(Customer customer) {
         String sql = "INSERT INTO account (customer_id, account_number, balance) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -30,7 +30,7 @@ public class AccountDao {
         return false;
     }
 
-    public boolean createAccount(Agent agent) {
+    public boolean createAgentAccount(Agent agent) {
         String sql = "INSERT INTO account (employee_id, account_number, balance, account_type) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {

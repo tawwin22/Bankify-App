@@ -3,19 +3,21 @@ package bankify.service;
 import bankify.Account;
 import bankify.Agent;
 import bankify.Customer;
-import bankify.DBConnection;
 import bankify.dao.AccountDao;
 import bankify.dao.AgentDao;
 import bankify.dao.CustomerDao;
 import org.mindrot.jbcrypt.BCrypt;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class AuthService {
     private CustomerDao customerDao;
+    private final Connection conn;
 
-    public AuthService(CustomerDao customerDao) {
+    public AuthService(CustomerDao customerDao, Connection connection) {
         this.customerDao = customerDao;
+        conn = connection;
     }
 
     // Register a new customer
@@ -50,7 +52,7 @@ public class AuthService {
             // Check if the plain text matches the hashed version
             if (BCrypt.checkpw(password, customer.getPassword())) {
                 // Activate the customer if the customer's account is CLOSED
-                AccountDao accountDao = new AccountDao(DBConnection.getConnection());
+                AccountDao accountDao = new AccountDao(conn);
                 Account account = accountDao.getAccountByNumber(customer.getPhoneNumber());
                 if (account != null && account.getStatus().equals("CLOSED")) {
                     accountDao.activateAccount(account.getAccountId());

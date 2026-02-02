@@ -6,18 +6,16 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import javax.swing.border.CompoundBorder;
 import java.awt.event.*;
-import java.sql.SQLException;
+import java.sql.Connection;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
-
-import bankify.dao.AccountDao;
 import bankify.service.AuthService;
 import bankify.dao.CustomerDao;
-import bankify.Customer;
 
 public class Register extends JFrame {
 
     private static final long serialVersionUID = 1L;
+    private final Connection conn;
     private JPanel contentPane;
     private JTextField txtFirstName, txtLastName, txtGmail;
     private JPasswordField password, confirmPassword;
@@ -52,6 +50,8 @@ public class Register extends JFrame {
     }
 
     public Register() {
+        conn = DBConnection.getConnection();
+
         setTitle("Register - Bankify");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(950, 600);
@@ -229,6 +229,14 @@ public class Register extends JFrame {
 
                 if (gmail.isEmpty()) { errEmail.setText("Please Enter Gmail!"); hasError = true; }
                 else if (!isValidGmail(gmail)) { errEmail.setText("Use yourname@gmail.com"); hasError = true; }
+                else if (isValidGmail(gmail)) {
+                    CustomerDao customerDao = new CustomerDao(conn);
+                    boolean hasEmail = customerDao.hasEmailForBoth(gmail);
+                    if (hasEmail) {
+                        errEmail.setText("This email is already used!");
+                        hasError = true;
+                    }
+                }
 
                 if (pass.isEmpty()) { errPass.setText("Please Type Password!"); hasError = true; }
                 else if (!isValidPassword(pass)) { errPass.setText("8+ chars, Uppercase, Digit, Special (@$!%*?&)"); hasError = true; }
@@ -237,8 +245,8 @@ public class Register extends JFrame {
                 else if (!pass.equals(cpass)) { errConfirm.setText("Passwords do not match!"); hasError = true; }
 
                 if (!hasError) {
-                    CustomerDao dao = new CustomerDao(DBConnection.getConnection());
-                    AuthService auth = new AuthService(dao);
+                    CustomerDao dao = new CustomerDao(conn);
+                    AuthService auth = new AuthService(dao, conn);
 
                     Customer newCustomer = new Customer();
                     newCustomer.setFirstName(firstName);
@@ -254,7 +262,9 @@ public class Register extends JFrame {
                         dispose();
                         // Pass the customer object into MyProfile so it auto-fills
                         // Get the customer saved in the database
-                        new MyProfile(registeredCustomer, dao).setVisible(true);
+                        new LoadingScreen(() -> {
+                            new MyProfile(registeredCustomer, dao, conn).setVisible(true);
+                        });
                     } else {
                         JOptionPane.showMessageDialog(null, "Registration failed. Try again.");
                     }

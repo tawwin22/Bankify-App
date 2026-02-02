@@ -12,12 +12,14 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DeactivateAccount extends JFrame {
 
     private static Customer customer;
     private static CustomerDao customerDao;
+    private static Connection conn;
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPanel;
@@ -27,7 +29,7 @@ public class DeactivateAccount extends JFrame {
  // Error & Success Labels
     private JLabel errPassword;
 
-    public DeactivateAccount(Customer customer, CustomerDao customerDao) {
+    public DeactivateAccount(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -35,6 +37,7 @@ public class DeactivateAccount extends JFrame {
 
         this.customer = customer;
         this.customerDao = customerDao;
+        conn = connection;
 
         setTitle("Bankify - Deactivate Account");
         // Screen Size ပြောင်းလဲခြင်း
@@ -44,7 +47,7 @@ public class DeactivateAccount extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
      // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings", customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Settings", customer, customerDao, conn);
 
 
         // Content
@@ -206,7 +209,7 @@ public class DeactivateAccount extends JFrame {
 
         int confirm = JOptionPane.showConfirmDialog(this, "Are you sure you want to deactivate your account?", "Confirm Deactivation", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
-            AccountDao accountDao = new AccountDao(DBConnection.getConnection());
+            AccountDao accountDao = new AccountDao(conn);
             Account account = accountDao.getAccountByNumber(customer.getPhoneNumber());
             boolean deactivated = accountDao.deactivateAccount(account.getAccountId());
             if (deactivated) {
@@ -263,7 +266,7 @@ public class DeactivateAccount extends JFrame {
         if (customer == null) {
             new Login().setVisible(true);
         } else {
-            new DeactivateAccount(customer, customerDao).setVisible(true);
+            new DeactivateAccount(customer, customerDao, conn).setVisible(true);
         }
     }
 

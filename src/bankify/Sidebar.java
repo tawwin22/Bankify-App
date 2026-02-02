@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.SQLException;
+
 import bankify.DBConnection;
 import bankify.Customer;
 import bankify.dao.CustomerDao;
@@ -13,10 +16,13 @@ public class Sidebar extends JPanel {
     private String activePage; // Track which page is active
     private Customer customer;
     private CustomerDao customerDao;
+    private Connection conn;
 
-    public Sidebar(JFrame parentFrame, String activePage ,Customer customer, CustomerDao customerDao) {
+    public Sidebar(JFrame parentFrame, String activePage ,Customer customer, CustomerDao customerDao,
+                   Connection connection) {
     	this.customer = customer;
     	this.customerDao = customerDao;
+        conn = connection;
         this.parentFrame = parentFrame;
         this.activePage = activePage;
 
@@ -95,12 +101,18 @@ public class Sidebar extends JPanel {
 
         // Action Listeners for navigation
         btn.addActionListener(e -> {
-            if (text.equals("Home")) navigate(new HomePage( customer,customerDao));
-            else if (text.equals("Deposit")) navigate(new DepositPage(customer, customerDao));
-            else if (text.equals("Withdraw")) navigate(new WithdrawPage(customer, customerDao));
-            else if (text.equals("Transfer")) navigate(new TransferPage(customer, customerDao));
-            else if (text.equals("Settings")) navigate(new MainSettings(customer, customerDao));
-            else if (text.equals("Transactions")) openTransactionsPage();
+            if (text.equals("Home")) navigate(new HomePage(customer ,customerDao, conn));
+            else if (text.equals("Deposit")) navigate(new DepositPage(customer, customerDao, conn));
+            else if (text.equals("Withdraw")) navigate(new WithdrawPage(customer, customerDao, conn));
+            else if (text.equals("Transfer")) navigate(new TransferPage(customer, customerDao, conn));
+            else if (text.equals("Settings")) navigate(new MainSettings(customer, customerDao, conn));
+            else if (text.equals("Transactions")) {
+                try {
+                    openTransactionsPage();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         });
 
         btn.addMouseListener(new MouseAdapter() {
@@ -123,12 +135,12 @@ public class Sidebar extends JPanel {
         parentFrame.dispose();
     }
 
-    private void openTransactionsPage() {
+    private void openTransactionsPage() throws SQLException {
         JFrame transactionsFrame = new JFrame("Bankify - Transactions");
         transactionsFrame.setSize(1200, 800);
         CardLayout cardLayout = new CardLayout();
         JPanel content = new JPanel(cardLayout);
-        TransactionsPage tp = new TransactionsPage(cardLayout, content, transactionsFrame, customer, customerDao);
+        TransactionsPage tp = new TransactionsPage(cardLayout, content, transactionsFrame, customer, customerDao, conn);
         content.add(tp, "Transactions");
         transactionsFrame.add(content);
         transactionsFrame.setLocationRelativeTo(parentFrame);

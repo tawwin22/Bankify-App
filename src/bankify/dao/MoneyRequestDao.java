@@ -3,8 +3,6 @@ package bankify.dao;
 import bankify.Account;
 import bankify.Agent;
 import bankify.Customer;
-import bankify.DBConnection;
-
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MoneyRequestDao {
-    private final Connection conn;
+    private static Connection conn;
     private final AccountDao accountDao;
     private final TransactionDao transactionDao;
 
-    public MoneyRequestDao(Connection conn) {
-        this.conn = conn;
+    public MoneyRequestDao(Connection connection) {
+        conn = connection;
         this.accountDao = new AccountDao(conn);
         this.transactionDao = new TransactionDao(conn);
     }
@@ -41,8 +39,8 @@ public class MoneyRequestDao {
     public void acceptOrDenyRequest(long request_id, String status) {
         if (status.equals("ACCEPT")) {
             RequestItem requestItem = getRequestById(request_id);
-            Customer customer = new CustomerDao(this.conn).findById(requestItem.request_from);
-            Agent agent = new AgentDao(this.conn).findById(requestItem.agent_id);
+            Customer customer = new CustomerDao(conn).findById(requestItem.request_from);
+            Agent agent = new AgentDao(conn).findById(requestItem.agent_id);
 
             Account customer_account;
             Account agent_account;
@@ -91,8 +89,8 @@ public class MoneyRequestDao {
 
         } else if (status.equals("DENY")) {
             RequestItem requestItem = getRequestById(request_id);
-            Customer customer = new CustomerDao(this.conn).findById(requestItem.request_from);
-            Agent agent = new AgentDao(this.conn).findById(requestItem.agent_id);
+            Customer customer = new CustomerDao(conn).findById(requestItem.request_from);
+            Agent agent = new AgentDao(conn).findById(requestItem.agent_id);
 
             String sql = "UPDATE money_requests SET status = ? WHERE request_id = ?";
             try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -108,7 +106,7 @@ public class MoneyRequestDao {
     }
 
     public List<RequestItem> getMoneyRequests(String email) {
-        AgentDao agentDao = new AgentDao(DBConnection.getConnection());
+        AgentDao agentDao = new AgentDao(conn);
         Agent agent = agentDao.findByEmail(email);
 
         List<RequestItem> list = new ArrayList<>();
@@ -121,8 +119,7 @@ public class MoneyRequestDao {
                 "ORDER BY r.requested_at DESC";
 
 
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             // Use PreparedStatement properly to prevent SQL Injection
             stmt.setLong(1, agent.getAgentId());
@@ -193,7 +190,7 @@ public class MoneyRequestDao {
     public static class RequestItem {
         public long request_id; // Added ID
         public long request_from;
-        long agent_id;
+        public long agent_id;
         public String request_type;
         public double amount;
         public String status;

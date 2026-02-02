@@ -10,6 +10,7 @@ import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class DepositPage extends JFrame {
@@ -25,9 +26,10 @@ public class DepositPage extends JFrame {
     private Account account;
     private AccountDao accountDao;
     private MoneyRequestDao moneyRequestDao;
+    private static Connection conn;
 
 
-    public DepositPage(Customer customer, CustomerDao customerDao) {
+    public DepositPage(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -35,8 +37,9 @@ public class DepositPage extends JFrame {
 
         this.customer = customer ;
         this.customerDao = customerDao;
-        this.accountDao = new AccountDao(DBConnection.getConnection());
-        this.moneyRequestDao = new MoneyRequestDao(DBConnection.getConnection());
+        conn = connection;
+        this.accountDao = new AccountDao(conn);
+        this.moneyRequestDao = new MoneyRequestDao(conn);
         try {
             this.account = accountDao.getAccountByCustomerId(customer.getCustomerId());
         } catch (Exception e) {
@@ -51,7 +54,7 @@ public class DepositPage extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Deposit", customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Deposit", customer, customerDao, conn);
         JPanel contentPanel = createDepositContent();
 
         add(sidebar, BorderLayout.WEST);
@@ -233,6 +236,7 @@ public class DepositPage extends JFrame {
                 moneyRequestDao.createMoneyRequest(customer.getCustomerId(), agentid, "DEPOSIT", amount, description);
 
                 JOptionPane.showMessageDialog(this, "Your Deposit request for " + amount + " is pending...");
+
                 txtAgent.setText("Enter ID"); txtAgent.setForeground(Color.GRAY);
                 txtAmount.setText("0");
                 txtDescription.setText("Optional note"); txtDescription.setForeground(Color.GRAY);
@@ -302,7 +306,7 @@ public class DepositPage extends JFrame {
         if (customer == null) {
             new Login().setVisible(true);
         } else {
-            new DepositPage(customer, customerDao).setVisible(true);
+            new DepositPage(customer, customerDao, conn).setVisible(true);
         }
     }
 

@@ -1,5 +1,6 @@
 package bankify.dao;
 
+import bankify.Agent;
 import bankify.Customer;
 
 import java.sql.*;
@@ -38,7 +39,7 @@ public class CustomerDao {
         return null;
     }
 
-    // Find customer by email + password
+    // Find customer by email
     public Customer findByEmail(String email) {
         String sql = "SELECT * FROM customer WHERE email = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -63,6 +64,16 @@ public class CustomerDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public boolean hasEmailForBoth(String email) {
+        Customer cus = findByEmail(email);
+        AgentDao agentDao = new AgentDao(this.conn);
+        Agent a = agentDao.findByEmail(email);
+
+        if (cus != null) {
+            return true;
+        } else return a != null;
     }
 
     // Update profile (phone_number, address, dob, and flip first_time_login)
@@ -98,6 +109,32 @@ public class CustomerDao {
                 c.setEmail(rs.getString("email"));
                 c.setPassword(rs.getString("password"));
                 c.setPhoneNumber(rs.getString("phone_number")); // ✅ fixed column name
+                c.setAddress(rs.getString("address"));
+                if (rs.getDate("dob") != null) {
+                    c.setDob(rs.getDate("dob").toLocalDate());
+                }
+                c.setFirstTimeLogin(rs.getBoolean("first_time_login"));
+                return c;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Customer findByPhonenumber(String phoneNumber) {
+        String sql = "SELECT * FROM customer WHERE phone_number = ?";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, phoneNumber);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Customer c = new Customer();
+                c.setCustomerId(rs.getInt("customer_id"));
+                c.setFirstName(rs.getString("first_name"));
+                c.setLastName(rs.getString("last_name"));
+                c.setEmail(rs.getString("email"));
+                c.setPassword(rs.getString("password"));
+                c.setPhoneNumber(rs.getString("phone_number"));
                 c.setAddress(rs.getString("address"));
                 if (rs.getDate("dob") != null) {
                     c.setDob(rs.getDate("dob").toLocalDate());

@@ -2,6 +2,7 @@ package bankify;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.sql.Connection;
 import java.sql.SQLException;
 import javax.swing.border.EmptyBorder;
 
@@ -14,12 +15,13 @@ public class Login extends JFrame {
     private JTextField txtUserName;
     private JPasswordField pwtPassword;
     private boolean showPassword = false;
+    private final Connection conn;
 
     // Error Labels
     private JLabel errEmail, errPass;
 
     public Login() {
-        DBConnection.getConnection();
+        conn = DBConnection.getConnection();
         setTitle("Login");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(900, 650);
@@ -224,8 +226,8 @@ public class Login extends JFrame {
             String email = txtUserName.getText().trim();
             String password = new String(pwtPassword.getPassword()).trim();
 
-            CustomerDao dao = new CustomerDao(DBConnection.getConnection());
-            AuthService auth = new AuthService(dao);
+            CustomerDao dao = new CustomerDao(conn);
+            AuthService auth = new AuthService(dao, conn);
 
             // Clear previous errors
             errEmail.setText("");
@@ -252,12 +254,13 @@ public class Login extends JFrame {
 
                 if (customer != null) {
                     dispose();
+                    Customer finalCustomer = customer;
                     if (customer.isFirstTimeLogin()) {
                         // First-time user → must complete profile
-                        new MyProfile(customer, dao).setVisible(true);
+                        new LoadingScreen(() -> new MyProfile(finalCustomer, dao, conn).setVisible(true)).setVisible(true);
                     } else {
                         // Returning user → go straight to homepage
-                    	new HomePage(customer, dao).setVisible(true);
+                        new LoadingScreen(() -> new HomePage(finalCustomer, dao, conn).setVisible(true)).setVisible(true);
                     }
                 } else {
                     errPass.setText("Invalid email or password!");

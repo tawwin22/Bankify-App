@@ -9,6 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.SQLException;
 
 public class TransferPage extends JFrame {
@@ -23,8 +24,9 @@ public class TransferPage extends JFrame {
     private static CustomerDao customerDao;
     private AccountDao accountDao;
     private boolean balanceVisible = true;
+    private static Connection conn;
 
-    public TransferPage(Customer customer, CustomerDao customerDao) {
+    public TransferPage(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -32,7 +34,8 @@ public class TransferPage extends JFrame {
 
         this.customer = customer ;
         this.customerDao = customerDao;
-        this.accountDao = new AccountDao(DBConnection.getConnection());
+        conn = connection;
+        this.accountDao = new AccountDao(conn);
 
         setTitle("Bankify - Transfer");
         // Screen size updated to 1200x800
@@ -41,7 +44,7 @@ public class TransferPage extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        Sidebar sidebar = new Sidebar(this, "Transfer", customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Transfer", customer, customerDao, conn);
 
         add(sidebar, BorderLayout.WEST);
         add(createTransferContent(), BorderLayout.CENTER);
@@ -298,24 +301,26 @@ public class TransferPage extends JFrame {
             Account account;
             try {
                 account = accountDao.getAccountByNumber(phoneNumber);
-                if (!account.getStatus().equals("CLOSED")) {
-                    TransferDao transferDao = new TransferDao(DBConnection.getConnection());
-                    Transaction tx = transferDao.createTransfer(customer, Long.parseLong(phoneNumber), amount, description);
+                if (account != null) {
+                    if (!account.getStatus().equals("CLOSED")) {
+                        TransferDao transferDao = new TransferDao(conn);
+                        Transaction tx = transferDao.createTransfer(customer, Long.parseLong(phoneNumber), amount, description);
 
-                    if (tx != null) {
-                        String message = String.format("Successfully transferred %,.2f MMK to %s", amount, phoneNumber);
-                        if (!description.isEmpty()) message += "\nDescription: " + description;
-                        JOptionPane.showMessageDialog(this, message);
-                        txtTo.setText("Enter ID");
-                        txtTo.setForeground(Color.GRAY);
-                        txtAmount.setText("0");
-                        txtDescription.setText("Optional note");
-                        txtDescription.setForeground(Color.GRAY);
+                        if (tx != null) {
+                            String message = String.format("Successfully transferred %,.2f MMK to %s", amount, phoneNumber);
+                            if (!description.isEmpty()) message += "\nDescription: " + description;
+                            JOptionPane.showMessageDialog(this, message);
+                            txtTo.setText("Enter ID");
+                            txtTo.setForeground(Color.GRAY);
+                            txtAmount.setText("0");
+                            txtDescription.setText("Optional note");
+                            txtDescription.setForeground(Color.GRAY);
+                        }
                     } else {
-                        JOptionPane.showMessageDialog(this, "No account found with this account number!");
+                        JOptionPane.showMessageDialog(this, "This account is currently closed! Try to connect in another way!");
                     }
                 } else {
-                    JOptionPane.showMessageDialog(this, "This account is currently closed! Try to connect in another way!");
+                    JOptionPane.showMessageDialog(this, "No account found with this account number!");
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);
@@ -389,7 +394,7 @@ public class TransferPage extends JFrame {
         if (customer == null) {
             new Login().setVisible(true);
         } else {
-            new TransferPage(customer, customerDao).setVisible(true);
+            new TransferPage(customer, customerDao, conn).setVisible(true);
         }
     }
 

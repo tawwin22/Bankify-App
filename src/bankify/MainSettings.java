@@ -8,15 +8,17 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.net.URL;
+import java.sql.Connection;
 
 public class MainSettings extends JFrame {
     private static Customer customer;
     private static CustomerDao customerDao;
+    private static Connection conn;
 
     private static final long serialVersionUID = 1L;
     private JPanel contentPanel;
 
-    public MainSettings(Customer customer, CustomerDao customerDao) {
+    public MainSettings(Customer customer, CustomerDao customerDao, Connection connection) {
         if (customer == null) {
             PageGuardService.checkSession(this, customer);
             return;
@@ -24,6 +26,7 @@ public class MainSettings extends JFrame {
 
         this.customer = customer;
         this.customerDao = customerDao;
+        conn = connection;
 
         setTitle("Bankify - Settings");
         setSize(1200, 800);
@@ -32,7 +35,7 @@ public class MainSettings extends JFrame {
         getContentPane().setLayout(new BorderLayout());
 
         // Sidebar
-        Sidebar sidebar = new Sidebar(this, "Settings", customer, customerDao);
+        Sidebar sidebar = new Sidebar(this, "Settings", customer, customerDao, conn);
         contentPanel = createContentPanel();
 
         getContentPane().add(sidebar, BorderLayout.WEST);
@@ -151,12 +154,12 @@ public class MainSettings extends JFrame {
 
     // ===== Navigation Methods =====
     private void openMyProfilePage() {
-        new MyProfile(customer, customerDao).setVisible(true);
+        new MyProfile(customer, customerDao, conn).setVisible(true);
         this.dispose();
     }
 
     private void openAccountTypePage() {
-        new AccountType(customer, customerDao).setVisible(true);
+        new AccountType(customer, customerDao, conn).setVisible(true);
         this.dispose();
     }
 
@@ -218,7 +221,7 @@ public class MainSettings extends JFrame {
         if (customer == null) {
             new Login().setVisible(true);
         } else {
-            new MainSettings(customer, customerDao).setVisible(true);
+            new MainSettings(customer, customerDao, conn).setVisible(true);
         }
     }
 
